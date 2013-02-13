@@ -16,11 +16,15 @@
 @end
 
 @implementation FPViewController
+@synthesize noArrow = _noArrow;
+@synthesize transparentPopover;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     [self.navigationController setNavigationBarHidden:YES];
+    
+    
 }
 
 - (void)viewDidUnload
@@ -38,7 +42,15 @@
     }
 }
 
--(void)popover:(id)sender
+//iOS6 implementation of the rotation
+- (NSUInteger)supportedInterfaceOrientations
+{
+    //All orientations
+    return UIInterfaceOrientationMaskAll;
+}
+
+
+-(IBAction)popover:(id)sender
 {
     //the controller we want to present as a popover
     DemoTableController *controller = [[DemoTableController alloc] initWithStyle:UITableViewStylePlain];
@@ -47,6 +59,7 @@
     
     popover.tint = FPPopoverDefaultTint;
     
+    
     if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     {
         popover.contentSize = CGSizeMake(300, 500);
@@ -54,11 +67,27 @@
     else {
         popover.contentSize = CGSizeMake(200, 300);
     }
+    if(sender == transparentPopover)
+    {
+        popover.alpha = 0.5;
+    }
     
-    popover.arrowDirection = FPPopoverArrowDirectionAny;
-    
-    //sender is the UIButton view
-    [popover presentPopoverFromView:sender]; 
+    if(sender == _noArrow) {
+        //no arrow
+        popover.arrowDirection = FPPopoverNoArrow;
+        [popover presentPopoverFromPoint: CGPointMake(self.view.center.x, self.view.center.y - popover.contentSize.height/2)];
+    }
+    else {
+        //sender is the UIButton view
+        popover.arrowDirection = FPPopoverArrowDirectionAny;
+        [popover presentPopoverFromView:sender];
+    }
+
+}
+
+-(IBAction)noArrow:(id)sender
+{
+    [self popover:sender];
 }
 
 
@@ -134,5 +163,6 @@
     NSLog(@"SELECTED ROW %d",rowNum);
     [popover dismissPopoverAnimated:YES];
 }
+
 
 @end

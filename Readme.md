@@ -83,6 +83,12 @@ If you want a popover like a popup, with no arrow
 
         popover.arrowDirection = FPPopoverNoArrow;
 
+### Transparency 
+If you want to change alpha channel and handle the transparency of the popover
+    
+        popover.alpha = 0.8;
+![transparent popover](https://raw.github.com/50pixels/FPPopover/master/alpha_popover.png)
+
 ###Delegate messages
 
 Set your delegate

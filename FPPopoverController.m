@@ -35,6 +35,8 @@
 @synthesize origin = _origin;
 @synthesize arrowDirection = _arrowDirection;
 @synthesize tint = _tint;
+@synthesize draw3dBorder = _draw3dBorder;
+@synthesize alpha = _alpha;
 
 -(void)addObservers
 {
@@ -78,9 +80,11 @@
     if(self)
     {
 		self.delegate = delegate;
-
+        
+        self.alpha = 1.0;
         self.arrowDirection = FPPopoverArrowDirectionAny;
         self.view.userInteractionEnabled = YES;
+
         _touchView = [[FPTouchView alloc] initWithFrame:self.view.bounds];
         _touchView.backgroundColor = [UIColor clearColor];
         _touchView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -210,11 +214,12 @@
     self.view.alpha = 0.0;
     [UIView animateWithDuration:0.2 animations:^{
         
-        self.view.alpha = 1.0;
+        self.view.alpha = self.alpha;
     }];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:@"FPNewPopoverPresented" object:self];
 }
+
 
 -(CGPoint)originFromView:(UIView*)fromView
 {
@@ -300,7 +305,11 @@
 	_deviceOrientation = [UIDevice currentDevice].orientation;
 
 	BOOL shouldResetView;
-	if ([_viewController respondsToSelector:@selector(shouldAutorotateToInterfaceOrientation:)])
+
+    //iOS6 has a new orientation implementation.
+    //we ask to reset the view if is >= 6.0
+	if ([_viewController respondsToSelector:@selector(shouldAutorotateToInterfaceOrientation:)] &&
+        [[[UIDevice currentDevice] systemVersion] floatValue] < 6.0)
 	{
 		UIInterfaceOrientation interfaceOrientation;
 		switch (_deviceOrientation)
@@ -320,15 +329,6 @@
 			default:
 				return;	// just ignore face up / face down, etc.
 		}
-
-		shouldResetView
-		  = (interfaceOrientation != _viewController.interfaceOrientation
-			 && [_viewController shouldAutorotateToInterfaceOrientation:interfaceOrientation]
-			 && ((UIInterfaceOrientationIsPortrait(interfaceOrientation)
-				  && UIInterfaceOrientationIsLandscape(_viewController.interfaceOrientation))
-				 ||
-				 (UIInterfaceOrientationIsLandscape(interfaceOrientation)
-				  && UIInterfaceOrientationIsPortrait(_viewController.interfaceOrientation))));
 	}
 	else
 	{
@@ -462,7 +462,19 @@
 
 -(CGRect)bestArrowDirectionAndFrameFromView:(UIView*)v
 {
-    CGPoint p = [v.superview convertPoint:v.frame.origin toView:self.view];
+    //thanks @Niculcea
+    // If we presentFromPoint with _fromView nil will calculate based on self.orgin with 2x2 size.
+    // Fix for presentFromPoint from avolovoy's FPPopover fork
+    float width = 2.0f;
+    float height = 2.0f;
+    CGPoint p = CGPointMake(self.origin.x, self.origin.y);
+    
+    if (v != nil) {
+        p = [v.superview convertPoint:v.frame.origin toView:self.view];
+        width = v.frame.size.width;
+        height = v.frame.size.height;
+    }
+    
     
     CGFloat ht = p.y; //available vertical space on top of the view
     CGFloat hb = [self parentHeight] -  (p.y + v.frame.size.height); //on the bottom
@@ -569,7 +581,7 @@
         if(r.origin.y <= 20) r.origin.y += 20;
     }
 
-    //check if the developer wants and arror
+    //check if the developer wants and arrow
     if(self.arrowDirection != FPPopoverNoArrow)
         _contentView.arrowDirection = bestDirection;
     
@@ -611,6 +623,23 @@
     }
 }
 
+#pragma mark 3D Border
+-(void)setDraw3dBorder:(BOOL)draw3dBorder
+{
+    _contentView.draw3dBorder = draw3dBorder;
+    [_contentView setNeedsDisplay];
+}
 
+-(BOOL)draw3dBorder
+{
+    return _contentView.draw3dBorder;
+}
+
+#pragma mark Transparency
+-(void)setAlpha:(CGFloat)alpha
+{
+    _alpha = alpha;
+    self.view.alpha = alpha;
+}
 
 @end
