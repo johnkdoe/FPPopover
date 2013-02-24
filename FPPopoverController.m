@@ -89,8 +89,9 @@
         _touchView.backgroundColor = [UIColor clearColor];
         _touchView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         _touchView.clipsToBounds = NO;
+		[_touchView becomeFirstResponder];
         [self.view addSubview:_touchView];
-		
+
         __block typeof (self) bself = self;
         [_touchView setTouchedOutsideBlock:^{
             [bself dismissPopoverAnimated:YES];
@@ -100,9 +101,8 @@
 
         _contentView = [[FPPopoverView alloc] initWithFrame:CGRectMake(0, 0, 
                                               self.contentSize.width, self.contentSize.height)];
-        
         _viewController = viewController;
-        
+
         [_touchView addSubview:_contentView];
         
         [_contentView addContentView:_viewController.view];
